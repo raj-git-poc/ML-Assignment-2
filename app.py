@@ -184,6 +184,10 @@ st.dataframe(pd.DataFrame(report_test).transpose().round(4))
 # Model Performance Comparison
 # ==========================================
 
+# ==========================================
+# Model Performance Comparison (All Models)
+# ==========================================
+
 st.markdown("---")
 st.header("Model Performance Comparison (All Models)")
 
@@ -191,33 +195,40 @@ comparison_data = []
 
 for name, model_instance in models.items():
 
-    if name in ["Logistic Regression", "KNN"]:
-        model_instance.fit(X_train_scaled, y_train)
-        y_pred = model_instance.predict(X_test_scaled)
-        y_prob = model_instance.predict_proba(X_test_scaled)[:, 1]
-    else:
-        model_instance.fit(X_train, y_train)
-        y_pred = model_instance.predict(X_test)
-        y_prob = model_instance.predict_proba(X_test)[:, 1]
+    try:
+        if name in ["Logistic Regression", "KNN"]:
+            model_instance.fit(X_train_scaled, y_train)
+            y_pred = model_instance.predict(X_test_scaled)
+            y_prob = model_instance.predict_proba(X_test_scaled)[:, 1]
+        else:
+            model_instance.fit(X_train, y_train)
+            y_pred = model_instance.predict(X_test)
+            y_prob = model_instance.predict_proba(X_test)[:, 1]
 
-    comparison_data.append([
-        name,
-        accuracy_score(y_test, y_pred),
-        roc_auc_score(y_test, y_prob),
-        precision_score(y_test, y_pred),
-        recall_score(y_test, y_pred),
-        f1_score(y_test, y_pred),
-        matthews_corrcoef(y_test, y_pred)
+        comparison_data.append([
+            name,
+            accuracy_score(y_test, y_pred),
+            roc_auc_score(y_test, y_prob),
+            precision_score(y_test, y_pred),
+            recall_score(y_test, y_pred),
+            f1_score(y_test, y_pred),
+            matthews_corrcoef(y_test, y_pred)
+        ])
+
+    except Exception as e:
+        st.error(f"Error training {name}: {e}")
+
+# Create DataFrame only if data exists
+if comparison_data:
+    comparison_df = pd.DataFrame(comparison_data, columns=[
+        "Model",
+        "Accuracy",
+        "AUC",
+        "Precision",
+        "Recall",
+        "F1 Score",
+        "MCC Score"
     ])
-
-comparison_df = pd.DataFrame(comparison_data, columns=[
-    "Model",
-    "Accuracy",
-    "AUC",
-    "Precision",
-    "Recall",
-    "F1 Score",
-    "MCC Score"
-])
-
-st.dataframe(comparison_df.round(4))
+    st.dataframe(comparison_df.round(4))
+else:
+    st.warning("Model comparison could not be generated.")
