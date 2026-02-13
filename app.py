@@ -180,3 +180,45 @@ if uploaded_file is not None:
             output_dict=True
         )
         st.dataframe(pd.DataFrame(upload_report).transpose().round(4))
+
+# ==========================================
+# Model Performance Comparison (All Models)
+# ==========================================
+
+st.markdown("---")
+st.header("Model Performance Comparison (All Models)")
+
+comparison_results = []
+
+for name, model in models.items():
+
+    if name in ["Logistic Regression", "KNN"]:
+        model.fit(X_train_scaled, y_train)
+        y_pred_all = model.predict(X_test_scaled)
+        y_prob_all = model.predict_proba(X_test_scaled)[:, 1]
+    else:
+        model.fit(X_train, y_train)
+        y_pred_all = model.predict(X_test)
+        y_prob_all = model.predict_proba(X_test)[:, 1]
+
+    comparison_results.append([
+        name,
+        accuracy_score(y_test, y_pred_all),
+        roc_auc_score(y_test, y_prob_all),
+        precision_score(y_test, y_pred_all),
+        recall_score(y_test, y_pred_all),
+        f1_score(y_test, y_pred_all),
+        matthews_corrcoef(y_test, y_pred_all)
+    ])
+
+comparison_df = pd.DataFrame(comparison_results, columns=[
+    "Model",
+    "Accuracy",
+    "AUC",
+    "Precision",
+    "Recall",
+    "F1 Score",
+    "MCC Score"
+])
+
+st.dataframe(comparison_df.round(4))
