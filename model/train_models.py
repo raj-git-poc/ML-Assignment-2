@@ -3,6 +3,7 @@
 # Model Training and Evaluation Script
 # ==========================================
 
+import os
 import pandas as pd
 import numpy as np
 
@@ -50,6 +51,9 @@ X_train, X_test, y_train, y_test = train_test_split(
     stratify=y
 )
 
+print("Training Set Shape:", X_train.shape)
+print("Test Set Shape:", X_test.shape)
+
 # ==========================================
 # Step 3: Feature Scaling
 # ==========================================
@@ -67,12 +71,16 @@ models = {
     "Decision Tree": DecisionTreeClassifier(),
     "KNN": KNeighborsClassifier(),
     "Naive Bayes": GaussianNB(),
-    "Random Forest": RandomForestClassifier(),
-    "XGBoost": XGBClassifier(use_label_encoder=False, eval_metric='logloss')
+    "Random Forest": RandomForestClassifier(random_state=42),
+    "XGBoost": XGBClassifier(
+        use_label_encoder=False,
+        eval_metric='logloss',
+        random_state=42
+    )
 }
 
 # ==========================================
-# Step 5: Train & Evaluate
+# Step 5: Train & Evaluate Models
 # ==========================================
 
 results = []
@@ -81,7 +89,7 @@ for name, model in models.items():
 
     print("\nTraining:", name)
 
-    # Scaling needed for LR and KNN
+    # Scaling required only for LR and KNN
     if name in ["Logistic Regression", "KNN"]:
         model.fit(X_train_scaled, y_train)
         y_pred = model.predict(X_test_scaled)
@@ -111,6 +119,9 @@ for name, model in models.items():
 # ==========================================
 # Step 6: Save Results to CSV
 # ==========================================
+
+# Create folder if not exists
+os.makedirs("model", exist_ok=True)
 
 results_df = pd.DataFrame(results, columns=[
     "Model",
