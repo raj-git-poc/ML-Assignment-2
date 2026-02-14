@@ -148,15 +148,16 @@ ML_Assignment_2/
 ```
 
 Below mentioned libraries are used (in requirements.txt) for code execution and Streamlit deployment:
-streamlit 
 
-scikit-learn 
+streamlit
 
-numpy 
+scikit-learn
 
-pandas 
+numpy
 
-matplotlib 
+pandas
+
+matplotlib
 
 seaborn
 
