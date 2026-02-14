@@ -160,6 +160,8 @@ matplotlib
 
 seaborn
 
+xgboost
+
 **How to Run the Project**
 
 Option 1: Run Using Deployed Streamlit App (Recommended)
