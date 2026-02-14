@@ -68,7 +68,7 @@ models = {
 st.header("Download Sample Test Data (CSV)")
 
 # GitHub raw file URL
-url = "https://raw.githubusercontent.com/raj-git-poc/TestRepo2Raj/edit/main/sample_test_data.csv"
+url = "https://raw.githubusercontent.com/raj-git-poc/ML-Assignment-2/blob/main/sample_test_data.csv"
 
 # Fetch the file content
 response = requests.get(url)
