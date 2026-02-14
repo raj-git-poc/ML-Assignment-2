@@ -147,6 +147,18 @@ ML_Assignment_2/
 |── sample_test_data.csv        # sample test data to download and validate from Streamlit portal
 ```
 
+Below mentioned libraries are used (in requirements.txt) for code execution and Streamlit deployment:
+streamlit 
+
+scikit-learn 
+
+numpy 
+
+pandas 
+
+matplotlib 
+
+seaborn
 
 **How to Run the Project**
 
