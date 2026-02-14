@@ -1,11 +1,9 @@
 # ==========================================
-# ML Assignment 2 - Final Streamlit App
+# Load Library
 # ==========================================
-
 import streamlit as st
 import pandas as pd
 import numpy as np
-
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -29,39 +27,34 @@ from sklearn.metrics import (
 )
 import requests
 # ==========================================
-# Page Configuration
-# ==========================================
-
-st.set_page_config(page_title="ML Classification App", layout="wide")
-st.title("Machine Learning Classification Models")
-
-# ==========================================
 # Load Dataset
 # ==========================================
-
 data = load_breast_cancer()
-X = data.data
-y = data.target
-
+X = data.data  # Features (30 features)
+y = data.target  # Labels (0: malignant, 1: benign)
+# Split 80/20 training and test data
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42, stratify=y
 )
-
 scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
+
+record_count = len(data.data)
+target_count = len(data.target)
+feature_count = len(data.feature_names)
 
 # ==========================================
 # Define Models
 # ==========================================
 
 models = {
-    "Logistic Regression": LogisticRegression(max_iter=5000),
+    "Logistic Regression": LogisticRegression(max_iter=1000),
     "Decision Tree": DecisionTreeClassifier(),
-    "KNN": KNeighborsClassifier(),
+    "kNN": KNeighborsClassifier(),
     "Naive Bayes": GaussianNB(),
-    "Random Forest": RandomForestClassifier(),
-    "XGBoost": XGBClassifier(
+    "Random Forest (Ensemble)": RandomForestClassifier(),
+    "XGBoost (Ensemble)": XGBClassifier(
         use_label_encoder=False,
         eval_metric="logloss",
         random_state=42
@@ -69,10 +62,10 @@ models = {
 }
 
 # ==========================================
-# a) Dataset Download Option
+# Download Sample Test Data (CSV)
 # ==========================================
 
-st.header("a) Dataset Download Option")
+st.header("Download Sample Test Data (CSV)")
 
 # GitHub raw file URL
 url = "https://raw.githubusercontent.com/raj-git-poc/TestRepo2Raj/edit/main/sample_test_data.csv"
@@ -82,34 +75,32 @@ response = requests.get(url)
 file_bytes = response.content
 
 st.download_button(
-    label="Download Sample CSV",
+    label="Download Sample Test Data CSV",
     data=file_bytes,
     file_name="sample_test_data.csv",
     mime="text/csv"
 )
 
 # ==========================================
-# a) Dataset Upload Option
+# Dataset upload option (CSV)
 # ==========================================
-
-st.header("a) Dataset Upload Option")
-
+st.header("Dataset Upload Option")
 uploaded_file = st.file_uploader(
     "Upload Test CSV File (Must contain 'target' column)",
     type=["csv"]
 )
 
 # ==========================================
-# b) Model Selection Dropdown
+# Model selection dropdown (if multiple models)
 # ==========================================
 
-st.header("b) Model Selection")
+st.header("Model Selection")
 
-model_choice = st.selectbox("Select a Model", list(models.keys()))
-selected_model = models[model_choice]
-
+model_options_dropdown = st.selectbox("Select a Model", list(models.keys()))
+selected_model = models[model_options_dropdown]
+#st.text("Selected Model: " + model_options_dropdown)
 # Train Selected Model
-if model_choice in ["Logistic Regression", "KNN"]:
+if model_options_dropdown in ["Logistic Regression", "KNN"]:
     selected_model.fit(X_train_scaled, y_train)
     y_pred_test = selected_model.predict(X_test_scaled)
     y_prob_test = selected_model.predict_proba(X_test_scaled)[:, 1]
@@ -123,56 +114,50 @@ else:
 # ==========================================
 
 if uploaded_file is not None:
-
     st.markdown("---")
-    st.header("Evaluation on Uploaded Dataset")
-
+    st.header("Evaluation on Uploaded Dataset")    
     uploaded_data = pd.read_csv(uploaded_file)
-
     if "target" not in uploaded_data.columns:
         st.error("Uploaded CSV must contain a 'target' column.")
     else:
-        X_upload = uploaded_data.drop("target", axis=1)
-        y_upload = uploaded_data["target"]
-
-        if model_choice in ["Logistic Regression", "KNN"]:
-            X_upload_scaled = scaler.transform(X_upload)
-            y_pred_upload = selected_model.predict(X_upload_scaled)
-            y_prob_upload = selected_model.predict_proba(X_upload_scaled)[:, 1]
+        st.text("Uploaded CSV has a 'target' column.")
+        X_uploadedData = uploaded_data.drop("target", axis=1)
+        y_uploadedData = uploaded_data["target"]
+        if model_options_dropdown in ["Logistic Regression", "KNN"]:
+            X_upload_scaled = scaler.transform(X_uploadedData)
+            y_pred_uploadedData = selected_model.predict(X_upload_scaled)
+            y_prob_uploadedData = selected_model.predict_proba(X_upload_scaled)[:, 1]
         else:
-            y_pred_upload = selected_model.predict(X_upload)
-            y_prob_upload = selected_model.predict_proba(X_upload)[:, 1]
+            y_pred_uploadedData = selected_model.predict(X_uploadedData)
+            y_prob_uploadedData = selected_model.predict_proba(X_uploadedData)[:, 1]
 
         st.subheader("Evaluation Metrics (Uploaded Data)")
 
         col1, col2, col3 = st.columns(3)
 
-        col1.metric("Accuracy", round(accuracy_score(y_upload, y_pred_upload), 4))
-        col2.metric("AUC", round(roc_auc_score(y_upload, y_prob_upload), 4))
-        col3.metric("Precision", round(precision_score(y_upload, y_pred_upload), 4))
+        col1.metric("Accuracy", round(accuracy_score(y_uploadedData, y_pred_uploadedData), 4))
+        col2.metric("AUC", round(roc_auc_score(y_uploadedData, y_prob_uploadedData), 4))
+        col3.metric("Precision", round(precision_score(y_uploadedData, y_pred_uploadedData), 4))
 
-        col1.metric("Recall", round(recall_score(y_upload, y_pred_upload), 4))
-        col2.metric("F1 Score", round(f1_score(y_upload, y_pred_upload), 4))
-        col3.metric("MCC Score", round(matthews_corrcoef(y_upload, y_pred_upload), 4))
+        col1.metric("Recall", round(recall_score(y_uploadedData, y_pred_uploadedData), 4))
+        col2.metric("F1 Score", round(f1_score(y_uploadedData, y_pred_uploadedData), 4))
+        col3.metric("MCC Score", round(matthews_corrcoef(y_uploadedData, y_pred_uploadedData), 4))
 
         st.subheader("Confusion Matrix (Uploaded Data)")
-        st.dataframe(pd.DataFrame(confusion_matrix(y_upload, y_pred_upload)))
+        st.dataframe(pd.DataFrame(confusion_matrix(y_uploadedData, y_pred_uploadedData)))
 
         st.subheader("Classification Report (Uploaded Data)")
         report_upload = classification_report(
-            y_upload,
-            y_pred_upload,
+            y_uploadedData,
+            y_pred_uploadedData,
             output_dict=True
         )
         st.dataframe(pd.DataFrame(report_upload).transpose().round(4))
 
 # ==========================================
-# c) Evaluation Metrics (Test Dataset)
+# Evaluation Metrics (Model Dataset)
 # ==========================================
-
-st.markdown("---")
-st.header("c) Evaluation Metrics (Test Dataset)")
-
+st.header("Evaluation Metrics (Test Dataset)")
 col1, col2, col3 = st.columns(3)
 
 col1.metric("Accuracy", round(accuracy_score(y_test, y_pred_test), 4))
@@ -184,15 +169,19 @@ col2.metric("F1 Score", round(f1_score(y_test, y_pred_test), 4))
 col3.metric("MCC Score", round(matthews_corrcoef(y_test, y_pred_test), 4))
 
 # ==========================================
-# d) Confusion Matrix & Classification Report (Test)
+# Confusion Matrix (Model Dataset)
 # ==========================================
 
-st.header("d) Confusion Matrix and Classification Report (Test Dataset)")
+st.header("Confusion Matrix (Model Dataset)")
 
 st.subheader("Confusion Matrix")
 st.dataframe(pd.DataFrame(confusion_matrix(y_test, y_pred_test)))
 
-st.subheader("Classification Report")
+# ==========================================
+# Classification Report (Model Dataset)
+# ==========================================
+
+st.subheader("Classification Report (Model Dataset)")
 report_test = classification_report(
     y_test,
     y_pred_test,
@@ -201,15 +190,11 @@ report_test = classification_report(
 st.dataframe(pd.DataFrame(report_test).transpose().round(4))
 
 # ==========================================
-# Model Performance Comparison
-# ==========================================
-
-# ==========================================
-# Model Performance Comparison (All Models)
+# Model Performance Comparison (All Models Dataset)
 # ==========================================
 
 st.markdown("---")
-st.header("Model Performance Comparison (All Models)")
+st.header("Model Performance Comparison (All Models Dataset)")
 
 comparison_data = []
 
@@ -244,17 +229,16 @@ for name in models.keys():
 if len(comparison_data) > 0:
 
     comparison_df = pd.DataFrame(comparison_data, columns=[
-        "Model",
+        "ML Model Name",
         "Accuracy",
         "AUC",
         "Precision",
         "Recall",
-        "F1 Score",
-        "MCC Score"
+        "F1",
+        "MCC"
     ])
 
     st.dataframe(comparison_df.round(4), use_container_width=True)
 
 else:
     st.error("No models were successfully evaluated.")
-
